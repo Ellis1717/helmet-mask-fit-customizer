@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Helmet & Mask Fit Customizer</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#e8eef8;background:#101722}
+*{box-sizing:border-box}body{margin:0}main{max-width:1050px;margin:auto;padding:30px 18px}
+h1{margin-bottom:5px}p{color:#b5c3d5}a{color:#8bd1ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+section{background:#192333;border:1px solid #35445a;border-radius:15px;padding:20px;margin:14px 0}
+label{display:block;font-size:13px;color:#d2deeb;margin:10px 0 5px}
+input,select{width:100%;padding:10px;color:#fff;border:1px solid #51617b;border-radius:7px;background:#101722}
+input[type=file]{padding:8px}button{background:#50b4ff;color:#081426;border:0;border-radius:8px;padding:12px 20px;font-weight:700;cursor:pointer;margin-top:15px}
+button:hover{background:#8bd1ff}.mini{color:#8da2bf;font-size:12px}.warning{border-left:3px solid #ffc46b;padding-left:12px}
+output{white-space:pre-wrap;display:block;color:#a9efc8;margin-top:12px}
+</style></head><body><main>
+<h1>Helmet & Mask Fit Customizer</h1>
+<p>Resize cosplay helmets and masks using head measurements. Generate foam templates and optional TPU inserts.</p>
+<p class="warning">Costume/prop use only — not for protective helmets. Photo/video head reconstruction is a planned feature, not included yet. Enter head dimensions in millimetres.</p>
+<div class="grid"><section><h2>Head profile</h2>
+<label>Head width (mm)<input id="head_width" type="number" value="160" min="30" max="500"></label>
+<label>Head depth (mm)<input id="head_depth" type="number" value="205" min="30" max="500"></label>
+<label>Head height (mm)<input id="head_height" type="number" value="240" min="30" max="500"></label>
+<label>Extra clearance each side (mm)<input id="clearance" type="number" value="2" min="0" max="30"></label>
+<p class="mini">Measure with a flexible ruler or callipers. Front and side photos do not provide absolute scale without a reference measurement.</p>
+</section>
+<section><h2>Comfort padding</h2>
+<label>Forehead (mm)<input id="pad_front" type="number" value="8" min="0" max="35"></label>
+<label>Back (mm)<input id="pad_back" type="number" value="8" min="0" max="35"></label>
+<label>Left (mm)<input id="pad_left" type="number" value="8" min="0" max="35"></label>
+<label>Right (mm)<input id="pad_right" type="number" value="8" min="0" max="35"></label>
+<label>Crown (mm)<input id="pad_crown" type="number" value="8" min="0" max="35"></label>
+</section></div>
+<section><h2>Resize helmet or mask</h2>
+<form id="resize"><label>Upload model (STL, OBJ, PLY, GLB, GLTF)<input type="file" name="model" accept=".stl,.obj,.ply,.glb,.gltf" required></label>
+<div class="grid"><div><label>Current interior width (mm)<input id="interior_width" type="number" value="0" min="0"></label>
+<label>Current interior depth (mm)<input id="interior_depth" type="number" value="0" min="0"></label>
+<label>Current interior height (mm)<input id="interior_height" type="number" value="0" min="0"></label></div><div>
+<label>Scaling mode<select id="mode"><option value="uniform">Uniform (same factor for all axes)</option><option value="xyz">Independent X/Y/Z</option></select></label>
+<p class="mini">Enter measured internal dimensions for best results. Any zero value uses an unverified estimate (85% of outside dimensions).</p></div></div>
+<button type="submit">Generate fitted STL</button></form><output id="resize_result"></output></section>
+<section><h2>Removable comfort kit</h2>
+<div class="grid"><div><label>Side pad width (mm)<input id="pad_width" type="number" value="65"></label>
+<label>Side pad height (mm)<input id="pad_height" type="number" value="35"></label></div><div><label>Crown pad width (mm)<input id="crown_width" type="number" value="65"></label>
+<label>Crown pad depth (mm)<input id="crown_depth" type="number" value="65"></label></div></div>
+<label>Material<select id="material"><option value="foam">Foam templates</option><option value="tpu">TPU spacers</option></select></label>
+<button id="kit" type="button">Download comfort kit ZIP</button><output id="kit_result"></output>
+<p class="mini">Kit includes both SVG foam outlines and STL spacer alternatives. Shapes are approximate, not conformal to your helmet interior. Avoid rigid inserts at pressure points.</p></section>
+</main><script>
+const ids=['head_width','head_depth','head_height','clearance','pad_front','pad_back','pad_left','pad_right','pad_crown'];
+const formData=extra=>{const f=new FormData();[...ids,...extra].forEach(id=>f.append(id,document.getElementById(id).value));return f};
+function save(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),2000)}
+async function send(url,f,name,target){const o=document.getElementById(target);o.textContent="Generating...";try{const r=await fetch(url,{method:'POST',body:f});if(!r.ok)throw new Error(await r.text());save(await r.blob(),name);o.textContent="Ready: "+name+(r.headers.get('X-Fit-Info')?"\n"+r.headers.get('X-Fit-Info'):"")}catch(e){o.textContent="Error: "+e.message}}
+document.getElementById('resize').addEventListener('submit',e=>{e.preventDefault();const f=formData(['interior_width','interior_depth','interior_height','mode']);f.append('model',document.querySelector('[name=model]').files[0]);send('/resize',f,'helmet_fitted.stl','resize_result')});
+document.getElementById('kit').addEventListener('click',()=>send('/comfort-kit',formData(['pad_width','pad_height','crown_width','crown_depth','material']),'comfort_fit_kit.zip','kit_result'));
+</script></body></html>
