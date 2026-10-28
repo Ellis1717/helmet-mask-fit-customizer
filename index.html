@@ -30,7 +30,22 @@ output{white-space:pre-wrap;display:block;color:#a9efc8;margin-top:12px}
 <label>Right (mm)<input id="pad_right" type="number" value="8" min="0" max="35"></label>
 <label>Crown (mm)<input id="pad_crown" type="number" value="8" min="0" max="35"></label>
 </section></div>
-<section><h2>Resize helmet or mask</h2>
+<section><h2>Photo-based calibration (manual landmarks)</h2>
+<p>Take one straight-on front photo and one true side-profile photo. Hold a ruler or another known-length reference <strong>in the same plane as the head</strong> to minimize perspective errors. In each image, click the two ends of your reference, then the two ends of your head span. Front = widest head width; side = front-to-back depth.</p>
+<div class="grid">
+<div><h3>Front view · width</h3><label>Photo<input type="file" id="upload_front" accept="image/*"></label>
+<label>Reference length (mm)<input id="reference_front" type="number" min="1" value="100"></label>
+<canvas id="photo_front" width="340" height="260" style="width:100%;max-height:420px;object-fit:contain;background:#101722;cursor:crosshair;border:1px solid #51617b"></canvas>
+<p class="mini" id="status_front"></p><button type="button" id="reset_front">Reset points</button></div>
+<div><h3>Side view · depth</h3><label>Photo<input type="file" id="upload_side" accept="image/*"></label>
+<label>Reference length (mm)<input id="reference_side" type="number" min="1" value="100"></label>
+<canvas id="photo_side" width="340" height="260" style="width:100%;max-height:420px;object-fit:contain;background:#101722;cursor:crosshair;border:1px solid #51617b"></canvas>
+<p class="mini" id="status_side"></p><button type="button" id="reset_side">Reset points</button></div>
+</div><button id="apply_calibration" type="button">Apply measured width and depth</button>
+<output id="calibration_result"></output><p class="mini">Photos remain on your device, are not sent to the backend or included in profile exports. This is 2D measurement, not automated AI or 3D reconstruction. Enter head height manually above.</p>
+<h3>Save / reuse your fitting measurements</h3><button type="button" id="export_profile">Export profile JSON</button>
+<label>Import profile JSON<input type="file" id="import_profile" accept=".json,application/json"></label>
+</section>\n<section><h2>Resize helmet or mask</h2>
 <form id="resize"><label>Upload model (STL, OBJ, PLY, GLB, GLTF)<input type="file" name="model" accept=".stl,.obj,.ply,.glb,.gltf" required></label>
 <div class="grid"><div><label>Current interior width (mm)<input id="interior_width" type="number" value="0" min="0"></label>
 <label>Current interior depth (mm)<input id="interior_depth" type="number" value="0" min="0"></label>
@@ -52,4 +67,4 @@ function save(blob,name){const u=URL.createObjectURL(blob);const a=document.crea
 async function send(url,f,name,target){const o=document.getElementById(target);o.textContent="Generating...";try{const r=await fetch(url,{method:'POST',body:f});if(!r.ok)throw new Error(await r.text());save(await r.blob(),name);o.textContent="Ready: "+name+(r.headers.get('X-Fit-Info')?"\n"+r.headers.get('X-Fit-Info'):"")}catch(e){o.textContent="Error: "+e.message}}
 document.getElementById('resize').addEventListener('submit',e=>{e.preventDefault();const f=formData(['interior_width','interior_depth','interior_height','mode']);f.append('model',document.querySelector('[name=model]').files[0]);send('/resize',f,'helmet_fitted.stl','resize_result')});
 document.getElementById('kit').addEventListener('click',()=>send('/comfort-kit',formData(['pad_width','pad_height','crown_width','crown_depth','material']),'comfort_fit_kit.zip','kit_result'));
-</script></body></html>
+</script><script src="/calibration.js"></script></body></html>
