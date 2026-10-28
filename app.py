@@ -4,7 +4,7 @@ import json
 import numpy as np
 import trimesh
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, Response
 from comfort import validate_fit, create_kit
 
 ROOT = Path(__file__).resolve().parent
@@ -13,6 +13,10 @@ app = FastAPI(title="Helmet & Mask Fit Customizer")
 @app.get("/", response_class=HTMLResponse)
 def home():
     return (ROOT / "index.html").read_text(encoding="utf-8")
+
+@app.get("/calibration.js")
+def calibration_js():
+    return Response((ROOT / "calibration.js").read_text(encoding="utf-8"), media_type="application/javascript")
 
 @app.post("/resize")
 async def resize(
